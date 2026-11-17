@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>משחק ABC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: playful, warm, big and clear for small hands
+IDEA: a wooden toy box of alphabet blocks
+PICTURE: the working game board itself, chunky coloured letter blocks
+COLOUR and TYPE: sunflower ground, deep blue ink, tomato accent; Andika (literacy font) for English, Heebo for Hebrew
+LAYOUT: modest title, tab bar, then the board fills the screen; stacks on phones
+*/
+:root{color-scheme:light dark;--bg:light-dark(#ffd23f,#14213d);--ink:light-dark(#14213d,#fdf6e3);--card:light-dark(#fffaf0,#1f2f55);--blue:#2251cc;--red:#ef3e36;--green:#2a9d5c;--line:light-dark(#14213d,#0b1226)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 Andika,Heebo,Arial,sans-serif;overflow-x:clip}
+.wrap{max-width:1100px;margin:auto;padding:18px max(4vw,12px) 40px}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.05;margin:4px 0 2px;font-weight:700}
+.sub{margin:0 0 16px;font-size:17px}
+.tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+button{font:inherit;cursor:pointer;color:inherit}
+.tab{min-height:48px;padding:6px 20px;border-radius:14px;border:3px solid var(--line);background:var(--card);font-weight:600;box-shadow:0 4px 0 var(--line)}
+.tab[aria-selected=true]{background:var(--blue);color:#fff}
+.tab:active,.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+button:focus-visible,select:focus-visible{outline:4px solid var(--red);outline-offset:2px}
+.panel{background:var(--card);border:3px solid var(--line);border-radius:22px;padding:clamp(14px,3vw,26px);box-shadow:0 6px 0 var(--line)}
+.btn{min-height:46px;padding:6px 16px;border-radius:12px;border:3px solid var(--line);background:#fff;color:#14213d;font-weight:600;box-shadow:0 3px 0 var(--line)}
+.btn.red{background:var(--red);color:#fff}.btn.blue{background:var(--blue);color:#fff}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+input{font:inherit;font-size:16px;min-height:46px;border-radius:12px;border:3px solid var(--line);padding:4px 10px;background:#fff;color:#14213d;width:11em}
+.pl{margin-bottom:16px;padding:12px 16px}
+#pPts{font-size:20px}
+select{font:inherit;font-size:16px;min-height:46px;border-radius:12px;border:3px solid var(--line);padding:4px 10px;background:#fff;color:#14213d}
+.en{direction:ltr;unicode-bidi:isolate}
+/* learn */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:20px;align-items:center;margin-bottom:20px}
+.big{font-size:clamp(90px,18vw,170px);line-height:1;font-weight:700;text-align:center;color:var(--blue)}
+.big span{color:var(--red)}
+.facts{display:grid;gap:8px}
+.fact{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:20px}
+.fact b{min-width:7.2em;font-weight:500;opacity:.8;font-size:17px}
+.fact .v{font-weight:700;font-size:24px}
+.word{display:flex;align-items:center;gap:12px;font-size:26px;font-weight:700}
+.word .em{font-size:56px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:10px}
+.blk{aspect-ratio:1;border-radius:14px;border:3px solid var(--line);font-size:30px;font-weight:700;color:#fff;box-shadow:0 4px 0 var(--line);display:grid;place-items:center;direction:ltr}
+.blk.on{outline:4px solid var(--ink);outline-offset:3px}
+/* memory */
+.mem{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:12px;margin-top:16px;perspective:900px}
+.mc{aspect-ratio:3/4;position:relative;border:0;padding:0;background:none}
+.mc .in{position:absolute;inset:0;transition:transform .45s;transform-style:preserve-3d}
+.mc.up .in,.mc.done .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:14px;border:3px solid var(--line);backface-visibility:hidden;display:grid;place-items:center;box-shadow:0 4px 0 var(--line)}
+.back{background:repeating-linear-gradient(45deg,var(--blue) 0 12px,#2f63e0 12px 24px);color:#fff;font-size:34px;font-weight:700}
+.front{background:#fff;color:#14213d;transform:rotateY(180deg);font-size:clamp(34px,6vw,48px);font-weight:700;text-align:center;line-height:1.1;padding:4px}
+.front small{display:block;font-size:14px;font-weight:500}
+.mc.done .front{background:#d8f5e3;border-color:var(--green)}
+.stat{font-size:19px;font-weight:600}
+.win{margin-top:16px;padding:14px;border-radius:16px;background:var(--green);color:#fff;font-size:24px;font-weight:700;text-align:center}
+/* quiz */
+.q{display:grid;gap:18px;justify-items:center;text-align:center}
+.prompt{font-size:22px;font-weight:600}
+.pic{font-size:110px;line-height:1}
+.opts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;width:100%;max-width:640px}
+.opt{aspect-ratio:1;font-size:clamp(44px,9vw,72px);font-weight:700;border-radius:18px;border:3px solid var(--line);background:#fff;color:#14213d;box-shadow:0 5px 0 var(--line);direction:ltr}
+.opt.ok{background:var(--green);color:#fff}.opt.no{background:var(--red);color:#fff;opacity:.75}
+.stars{font-size:28px;letter-spacing:2px;min-height:40px}
+.msg{font-size:24px;font-weight:700;min-height:36px}
+.hide{display:none!important}
+.note{font-size:14px;opacity:.8;margin-top:14px}
+/* compact: everything fits one screen */
+.wrap{padding:10px max(3vw,10px) 8px}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;margin-bottom:8px}
+h1{font-size:clamp(24px,3.4vw,34px);margin:0}
+.pl{margin:0;padding:0}
+.tabs{gap:8px;margin-bottom:10px}.tab{min-height:42px;padding:4px 14px}
+.panel{padding:clamp(10px,2vw,18px)}
+.hero{gap:12px;margin-bottom:12px}
+.big{font-size:clamp(64px,14vh,140px)}
+.fact{font-size:18px}.fact .v{font-size:21px}.facts{gap:4px}
+.word{font-size:22px}.word .em{font-size:44px}
+.grid{grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:7px}
+.blk{aspect-ratio:auto;height:clamp(42px,7vh,58px);font-size:23px;box-shadow:0 3px 0 var(--line)}
+.mem{margin-top:10px;gap:9px}
+.mem{justify-content:center}.mc{aspect-ratio:auto;height:var(--ch,120px)}
+.front{font-size:clamp(26px,min(6vw,7vh),46px)}
+.win{margin-top:10px;padding:8px;font-size:20px}
+.q{gap:8px}
+.prompt{font-size:20px}
+.pic{font-size:clamp(40px,8vh,80px)}
+.opts{max-width:560px;gap:10px}
+.opt{aspect-ratio:auto;height:clamp(60px,13vh,110px);font-size:clamp(36px,8vh,66px)}
+.msg{font-size:19px;min-height:0;line-height:1.35}
+.stars{font-size:22px;min-height:0}
+#qSay{min-height:40px;padding:2px 14px}#qNext{min-height:44px!important;font-size:19px!important}
+.note{font-size:12px;margin-top:6px}
+@media(max-width:600px){
+ .top{gap:4px 10px}.top h1{font-size:24px}#pPts{font-size:16px}
+ .tabs{flex-wrap:nowrap;gap:6px}.tab{flex:1;font-size:14px;padding:4px 6px;min-height:40px}
+ .hero{grid-template-columns:auto minmax(0,1fr);gap:10px;margin-bottom:10px}
+ .big{font-size:64px}
+ .fact{font-size:15px}.fact b{min-width:0;font-size:14px}.fact .v{font-size:17px}
+ .word{font-size:17px;gap:6px}.word .em{font-size:34px}.word span span{font-size:15px!important}
+ #learn .btn{min-height:40px;padding:2px 10px;font-size:15px}
+ .grid{grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.blk{height:40px;font-size:18px;border-width:2px}
+ .q .prompt{font-size:17px}
+}
+/* words */
+.chip{min-height:40px;padding:2px 14px;border-radius:999px;border:3px solid var(--line);background:#fff;color:#14213d;font-weight:600}
+.chip.on{background:var(--blue);color:#fff}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px;margin-top:10px}
+.wc{border:3px solid var(--line);border-radius:14px;background:#fff;color:#14213d;box-shadow:0 3px 0 var(--line);padding:6px 4px;display:grid;justify-items:center;line-height:1.25}
+.wc .e{font-size:clamp(30px,6vh,46px);line-height:1.1}.wc .w{font-size:20px;font-weight:700;direction:ltr}.wc .t{color:var(--red);font-size:16px}.wc .h{font-size:15px}
+.wopts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:560px;width:100%}
+.wopt{height:clamp(70px,15vh,120px);font-size:clamp(40px,9vh,70px);border-radius:16px;border:3px solid var(--line);background:#fff;box-shadow:0 4px 0 var(--line)}
+.wopt.ok{background:#d8f5e3;border-color:var(--green)}.wopt.no{opacity:.35}
+@media(max-width:600px){#cats{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}#cats .chip{flex:none}.wgrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:6px}.wc{padding:3px 2px;border-width:2px}.wc .e{font-size:28px}.wc .w{font-size:14px}.wc .t,.wc .h{font-size:12px}.wopts{grid-template-columns:repeat(2,minmax(0,1fr))}.chip{min-height:36px;padding:2px 10px;font-size:14px}#wMode{font-size:14px;min-height:40px}}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+.pop{animation:pop .35s}
+@media(prefers-reduced-motion:reduce){.mc .in{transition:none}.pop{animation:none}}
+@media(max-width:600px){.hero{grid-template-columns:1fr}.opts{grid-template-columns:repeat(2,minmax(0,1fr))}.fact b{min-width:6em}.mem{grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:9px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><h1>לומדים <span class="en">ABC</span> 🎈</h1>
+  <div class="pl"><div class="row">
+    <label>👤 מי משחק? <select id="pSel"></select></label>
+    <span id="pNew" class="row hide"><input id="pName" placeholder="כתבו שם" maxlength="20" aria-label="שם השחקן"><button class="btn blue" id="pAdd">שמירה</button></span>
+    <span class="stat" id="pPts"></span>
+  </div></div></div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-t="learn" aria-selected="true">📖 לומדים אותיות</button>
+    <button class="tab" role="tab" data-t="mem" aria-selected="false">🃏 משחק זיכרון</button>
+    <button class="tab" role="tab" data-t="quiz" aria-selected="false">👂 שומעים ומוצאים</button>
+    <button class="tab" role="tab" data-t="words" aria-selected="false">🔤 מילים</button>
+  </div>
+
+  <section id="learn" class="panel">
+    <div class="hero">
+      <div class="big en" id="bigL"></div>
+      <div class="facts">
+        <div class="fact"><b>שם האות:</b><span class="v" id="fName"></span></div>
+        <div class="fact"><b>איך היא נשמעת:</b><span class="v" id="fSound"></span></div>
+        <div class="fact"><b>האות בעברית:</b><span class="v" id="fHeb"></span></div>
+        <div class="word"><span class="em" id="fEm"></span><span><span class="en" id="fWord"></span><br><span style="font-size:20px;color:var(--red)">קוראים: <span id="fTr"></span></span><br><small style="font-weight:500;font-size:18px">פירוש: <span id="fWordHe"></span></small></span></div>
+        <div class="row">
+          <button class="btn red" id="sayL">🔊 שם האות</button>
+          <button class="btn blue" id="sayW">🔊 המילה</button>
+        </div>
+        <div class="row">
+          <button class="btn" id="prev">→ הקודמת</button>
+          <button class="btn" id="next">הבאה ←</button>
+        </div>
+      </div>
+    </div>
+    <div class="grid" id="abc"></div>
+  </section>
+
+  <section id="mem" class="panel hide">
+    <div class="row">
+      <label>מה מתאימים?
+        <select id="mMode">
+          <option value="ul">אות גדולה ↔ אות קטנה</option>
+          <option value="pic">אות ↔ תמונה</option>
+          <option value="heb">אות באנגלית ↔ אות בעברית</option>
+        </select></label>
+      <label>כמה זוגות?
+        <select id="mCount"><option>4</option><option selected>6</option><option>8</option><option>10</option></select></label>
+      <button class="btn red" id="mNew">🔄 משחק חדש</button>
+      <span class="stat" id="mStat"></span>
+    </div>
+    <div class="win hide" id="mWin"></div>
+    <div class="mem" id="board"></div>
+  </section>
+
+  <section id="quiz" class="panel hide">
+    <div class="row" style="justify-content:center;margin-bottom:10px">
+      <label>סוג שאלה:
+        <select id="qMode">
+          <option value="hear">שומעים אות ומוצאים אותה</option>
+          <option value="pic">באיזו אות מתחילה המילה?</option>
+          <option value="low">מוצאים את האות הקטנה</option>
+        </select></label>
+      <button class="btn red" id="qNew">🔄 מתחילים מחדש</button>
+    </div>
+    <div class="q">
+      <div class="stat" id="qStat"></div>
+      <div class="prompt" id="qPrompt"></div>
+      <div class="pic" id="qPic"></div>
+      <button class="btn blue" id="qSay">🔊 עוד פעם</button>
+      <div class="opts" id="opts"></div>
+      <div class="msg" id="qMsg"></div>
+      <button class="btn red hide" id="qNext" style="font-size:22px;min-height:56px;padding:6px 28px">הבא ←</button>
+      <div class="stars" id="stars"></div>
+    </div>
+  </section>
+
+  <section id="words" class="panel hide">
+    <div class="row" id="cats"></div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn red" id="wMode">🎯 משחק: שומעים ומוצאים תמונה</button>
+      <span class="stat" id="wStat"></span>
+    </div>
+    <div class="wgrid" id="wLearn"></div>
+    <div class="q hide" id="wQuiz" style="margin-top:10px">
+      <div class="prompt">הקשיבו — איזו תמונה שמעתם?</div>
+      <button class="btn blue" id="wSay">🔊 עוד פעם</button>
+      <div class="wopts" id="wOpts"></div>
+      <div class="msg" id="wMsg"></div>
+      <button class="btn red hide" id="wNext" style="font-size:19px;min-height:44px;padding:4px 28px">הבא ←</button>
+    </div>
+  </section>
+  <p class="note hide" id="voiceNote">ההשמעה משתמשת בקול האנגלי של הדפדפן. אם לא שומעים כלום, כדאי לבדוק את עוצמת הקול או לנסות דפדפן אחר (Chrome עובד טוב).</p>
+</div>
+
+<script>
+{
+// [Upper, name in Hebrew letters, sound, Hebrew letter, word, emoji, word in Hebrew]
+const D=[
+["A","אֵי","אַ (כמו ב־Apple)","אַ","Apple","🍎","תַּפּוּחַ"],
+["B","בִּי","בּ","ב","Ball","⚽","כַּדּוּר"],
+["C","סִי","ק (ולפעמים ס)","ק / ס","Cat","🐱","חָתוּל"],
+["D","דִּי","ד","ד","Dog","🐶","כֶּלֶב"],
+["E","אִי","אֶ (כמו ב־Egg)","אֶ","Egg","🥚","בֵּיצָה"],
+["F","אֶף","פ","פ","Fish","🐟","דָּג"],
+["G","גִ'י","ג (ולפעמים ג')","ג","Grapes","🍇","עֲנָבִים"],
+["H","אֵייץ'","ה","ה","House","🏠","בַּיִת"],
+["I","אַיי","אִ (ולפעמים אַיי)","אִ","Ice cream","🍦","גְּלִידָה"],
+["J","גֵ'יי","ג'","ג'","Juice","🧃","מִיץ"],
+["K","קֵיי","ק","ק","Key","🔑","מַפְתֵּחַ"],
+["L","אֶל","ל","ל","Lion","🦁","אַרְיֵה"],
+["M","אֶם","מ","מ","Moon","🌙","יָרֵחַ"],
+["N","אֶן","נ","נ","Nut","🥜","אֱגוֹז"],
+["O","אוֹ","אוֹ / אָ","אוֹ","Orange","🍊","תַּפּוּז"],
+["P","פִּי","פּ","פ","Pencil","✏️","עִפָּרוֹן"],
+["Q","קְיוּ","קוּ (תמיד עם U)","ק","Question","❓","שְׁאֵלָה"],
+["R","אָר","ר","ר","Rabbit","🐰","אַרְנָב"],
+["S","אֶס","ס","ס","Sun","☀️","שֶׁמֶשׁ"],
+["T","טִי","ט / ת","ט","Tree","🌳","עֵץ"],
+["U","יוּ","אַ (ולפעמים יוּ)","אַ / יוּ","Umbrella","☂️","מִטְרִיָּה"],
+["V","וִי","ו","ו","Van","🚐","טֶנְדֶּר"],
+["W","דַּאבֶּל־יוּ","וּ (W)","ו","Watch","⌚","שָׁעוֹן"],
+["X","אֶקְס","קְס","קס","Fox","🦊","שׁוּעָל (X בַּסּוֹף!)"],
+["Y","וַאי","י","י","Yo-yo","🪀","יוֹ־יוֹ"],
+["Z","זִי","ז","ז","Zebra","🦓","זֶבְּרָה"]];
+const TR=["אֶפֶּל","בּוֹל","קֶט","דּוֹג","אֶג","פִישׁ","גְרֵייפְּס","הָאוּס","אַייס קְרִים","ג'וּס","קִי","לַיְאֶן","מוּן","נַט","אוֹרֶנְג'","פֶּנְסִיל","קְוֶוסְצֶ'ן","רֶבִּיט","סַן","טְרִי","אַמְבְּרֶלָה","וֶן","ווֹטְשׁ","פוֹקְס","יוֹ־יוֹ","זִיבְּרָה"];
+const COLS=["#ef3e36","#2251cc","#2a9d5c","#f08a24","#7b4fd6","#0f9db3"];
+const $=id=>document.getElementById(id);
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+
+// speech
+let voice=null;
+let heVoice=null;
+const pickVoice=()=>{try{const v=speechSynthesis.getVoices();heVoice=null;voice=(navigator.onLine?null:v.find(x=>/^en/i.test(x.lang)&&x.localService))||v.find(x=>/^en-US/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null}catch(e){}};
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}else{$('voiceNote').classList.remove('hide');$('voiceNote').textContent='בדפדפן הזה אין השמעה קולית — אפשר לשחק בלי קול, או לפתוח ב־Chrome.'}
+const say=(t,rate=.8)=>{try{if(typeof gapT!=='undefined')clearTimeout(gapT);speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';if(voice)u.voice=voice;u.rate=rate;speechSynthesis.speak(u)}catch(e){}};
+const sayLetter=i=>say(D[i][0]+'.',.7);
+let gapT=0;
+// players & points
+let P={},who='';
+try{P=JSON.parse(localStorage.getItem('abcPlayers')||'{}')||{};who=localStorage.getItem('abcWho')||''}catch(e){}
+if(!(who in P))who='';
+const saveP=()=>{try{localStorage.setItem('abcPlayers',JSON.stringify(P));localStorage.setItem('abcWho',who)}catch(e){}};
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const renderP=()=>{const names=Object.keys(P);
+  $('pSel').innerHTML=(who?'':'<option value="" selected disabled>בחרו שחקן</option>')+names.map(n=>`<option value="${esc(n)}"${n===who?' selected':''}>${esc(n)}</option>`).join('')+'<option value="__new">➕ שחקן חדש</option>';
+  if(!names.length){$('pSel').value='__new';$('pNew').classList.remove('hide')}
+  $('pPts').innerHTML=who?`⭐ ${esc(who)}: <b>${P[who]}</b> נקודות`:'';};
+const addPts=n=>{if(!who)return;P[who]+=n;saveP();renderP();const el=$('pPts');el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')};
+const PR=['כל הכבוד','יופי','מצוין','נהדר','איזה יופי','יפה מאוד','מעולה'];
+const praiseRaw=()=>PR[Math.random()*PR.length|0]+(who?', '+who:'')+'!';
+
+// speak a sequence: [text, 'en'|'he', rate], short pause between parts
+const seq=items=>{clearTimeout(gapT);try{speechSynthesis.cancel()}catch(e){}
+  items=items.filter(x=>x[1]!=='he'||heVoice);let k=0;
+  const next=()=>{if(k>=items.length)return;const[t,l,r]=items[k++];
+    try{const u=new SpeechSynthesisUtterance(t);u.lang=l==='he'?'he-IL':'en-US';const vv=l==='he'?heVoice:voice;if(vv)u.voice=vv;u.rate=r;u.onend=()=>{gapT=setTimeout(next,450)};speechSynthesis.speak(u)}catch(e){}};
+  next()};
+const sayBoth=(i,pr)=>seq([[D[i][0]+'.','en',.7],[D[i][4],'en',.75],...(pr?[[pr,'he',1]]:[])]);
+const sayHe=t=>seq([[t,'he',1]]);
+
+$('pSel').onchange=()=>{const v=$('pSel').value;if(v==='__new'){$('pNew').classList.remove('hide');$('pName').focus()}else{who=v;$('pNew').classList.add('hide');saveP();renderP()}};
+$('pAdd').onclick=()=>{const n=$('pName').value.trim();if(!n)return;if(!(n in P))P[n]=0;who=n;$('pName').value='';$('pNew').classList.add('hide');saveP();renderP()};
+$('pName').onkeydown=e=>{if(e.key==='Enter')$('pAdd').click()};
+renderP();
+// tabs
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));
+  ['learn','mem','quiz','words'].forEach(s=>$(s).classList.toggle('hide',s!==b.dataset.t));
+  if(b.dataset.t==='quiz'&&!qRound)qStart();if(b.dataset.t==='mem')fitBoard();
+});
+
+// learn
+let cur=0;
+$('abc').innerHTML=D.map((d,i)=>`<button class="blk" data-i="${i}" style="background:${COLS[i%6]}" aria-label="${d[0]}">${d[0]}${d[0].toLowerCase()}</button>`).join('');
+const show=i=>{cur=(i+26)%26;const d=D[cur];
+  $('bigL').innerHTML=`${d[0]}<span>${d[0].toLowerCase()}</span>`;$('bigL').classList.remove('pop');void $('bigL').offsetWidth;$('bigL').classList.add('pop');
+  $('fName').textContent=d[1];$('fSound').textContent=d[2];$('fHeb').textContent=d[3];
+  $('fEm').textContent=d[5];$('fWord').textContent=d[4];$('fWordHe').textContent=d[6];$('fTr').textContent=TR[cur];
+  document.querySelectorAll('.blk').forEach((b,k)=>b.classList.toggle('on',k===cur));};
+$('abc').onclick=e=>{const b=e.target.closest('.blk');if(b){show(+b.dataset.i);sayLetter(cur)}};
+$('sayL').onclick=()=>sayLetter(cur);
+$('sayW').onclick=()=>say(D[cur][4],.75);
+$('prev').onclick=()=>{show(cur-1);sayLetter(cur)};$('next').onclick=()=>{show(cur+1);sayLetter(cur)};
+show(0);
+
+// memory
+let open=[],lock=false,moves=0,found=0,pairs=0;
+const faceHtml=(i,kind)=>{const d=D[i];
+  if(kind==='U')return `<span class="en">${d[0]}</span>`;
+  if(kind==='l')return `<span class="en">${d[0].toLowerCase()}</span>`;
+  if(kind==='p')return `<span>${d[5]}<small class="en">${d[4]}</small><small>${TR[i]}</small></span>`;
+  if(kind==='h')return `<span>${d[3]}<small>בעברית</small></span>`;
+  return `<span class="en">${d[0]}${d[0].toLowerCase()}</span>`;};
+const mStat=()=>$('mStat').textContent=`ניסיונות: ${moves} · זוגות: ${found}/${pairs}`;
+const mNew=()=>{const mode=$('mMode').value;pairs=+$('mCount').value;moves=found=0;open=[];lock=false;$('mWin').classList.add('hide');
+  let pool=shuffle([...Array(26).keys()]);
+  if(mode==='heb'){const seen=new Set();pool=pool.filter(i=>!'AEIOU'.includes(D[i][0])&&!seen.has(D[i][3])&&seen.add(D[i][3]))}
+  const pick=pool.slice(0,pairs);
+  const k=mode==='ul'?['U','l']:mode==='pic'?['B','p']:['B','h'];
+  const base=pick.flatMap(i=>[[i,k[0]],[i,k[1]]]);let cards;
+  for(let t=0;t<200;t++){cards=shuffle(base);const pos={};cards.forEach(([i],p)=>(pos[i]=pos[i]||[]).push(p));
+    const ds=Object.values(pos).map(([a,b])=>b-a);if(ds.every(d=>d>1)&&new Set(ds).size>Math.min(2,ds.length-1))break}
+  $('board').innerHTML=cards.map(([i,kd])=>`<button class="mc" data-i="${i}" data-k="${kd}" aria-label="קלף"><div class="in"><div class="face back">?</div><div class="face front">${faceHtml(i,kd)}</div></div></button>`).join('');
+  mStat();fitBoard();};
+$('board').onclick=e=>{const c=e.target.closest('.mc');if(!c||lock||c.classList.contains('up')||c.classList.contains('done'))return;
+  c.classList.add('up');open.push(c);{const k=c.dataset.k;if(k==='p')say(D[+c.dataset.i][4],.75);else if(k!=='h')sayLetter(+c.dataset.i);else try{speechSynthesis.cancel()}catch(e){}}
+  if(open.length<2)return;moves++;const[a,b]=open;open=[];
+  if(a.dataset.i===b.dataset.i){setTimeout(()=>{a.classList.add('done');b.classList.add('done');found++;addPts(1);mStat();sayBoth(+a.dataset.i);
+      if(found===pairs){const w=$('mWin'),pr=praiseRaw();addPts(5);w.innerHTML=`🎉 ${esc(pr)} מצאתם את כל הזוגות ב־${moves} ניסיונות`+(who?'<br>+5 נקודות בונוס':'');w.classList.remove('hide');fitBoard();setTimeout(()=>heVoice?sayHe(pr+' מצאת את כל הזוגות'):say('Great job!',.85),2600)}},350)}
+  else{lock=true;setTimeout(()=>{a.classList.remove('up');b.classList.remove('up');lock=false},1100)}
+  mStat();};
+const fitBoard=()=>{const b=$('board'),n=b.children.length;if(!n||b.offsetParent===null)return;
+  const W=b.clientWidth,gap=9,avail=innerHeight-b.getBoundingClientRect().top-42;let best=null;
+  for(let rows=1;rows<=n;rows++){const cols=Math.ceil(n/rows);const colW=(W-gap*(cols-1))/cols;if(colW<52)continue;
+    const h=Math.min(colW*4/3,(avail-gap*(rows-1))/rows,170);if(!best||h>best.h)best={h,cols}}
+  if(!best)best={h:70,cols:Math.max(1,Math.floor((W+gap)/(52+gap)))};
+  const h=Math.max(58,best.h);b.style.setProperty('--ch',h+'px');b.style.gridTemplateColumns=`repeat(${best.cols},${Math.min(h*.8,(W-gap*(best.cols-1))/best.cols)}px)`};
+addEventListener('resize',fitBoard);
+$('mNew').onclick=mNew;$('mMode').onchange=mNew;$('mCount').onchange=mNew;mNew();
+
+// quiz
+const ROUNDS=10;let qRound=0,score=0,ans=-1,done=false;
+const qAsk=()=>{const mode=$('qMode').value;done=false;$('qMsg').textContent='';
+  let pool=[...Array(26).keys()];if(mode==='pic')pool=pool.filter(i=>D[i][0]!=='X');
+  ans=pool[Math.random()*pool.length|0];
+  const opts=shuffle([ans,...shuffle(pool.filter(i=>i!==ans)).slice(0,3)]);
+  const low=mode==='low'||(mode==='hear'&&qRound%2===1);
+  $('qStat').textContent=`שאלה ${qRound} מתוך ${ROUNDS} · נקודות: ${score}`;
+  if(mode==='hear'){$('qPrompt').textContent='הקשיבו — איזו אות שמעתם?';$('qPic').textContent='👂';sayLetter(ans)}
+  else if(mode==='pic'){$('qPrompt').textContent='באיזו אות מתחילה המילה?';$('qPic').textContent=D[ans][5];say(D[ans][4],.75)}
+  else{$('qPrompt').innerHTML=`מצאו את האות הקטנה של <span class="en" style="font-size:40px;color:var(--red)">${D[ans][0]}</span>`;$('qPic').textContent='';sayLetter(ans)}
+  $('opts').innerHTML=opts.map(i=>`<button class="opt" data-i="${i}">${low?D[i][0].toLowerCase():D[i][0]}</button>`).join('');};
+const qStart=()=>{$('qNext').classList.add('hide');qRound=1;score=0;$('stars').textContent='';qAsk()};
+$('opts').onclick=e=>{const b=e.target.closest('.opt');if(!b||done)return;const i=+b.dataset.i;
+  if(i===ans){done=true;b.classList.add('ok','pop');const pr=praiseRaw();score++;addPts(1);$('stars').textContent+='⭐';$('qMsg').innerHTML=`<span style="color:var(--green)">👏 ${esc(pr)}</span><br><span class="en">${D[ans][0]}</span> — ${D[ans][1]}<br>${D[ans][5]} <span class="en">${D[ans][4]}</span> · קוראים: ${TR[ans]} · פירוש: ${D[ans][6]}`;sayBoth(ans,pr);
+    $('qNext').textContent=qRound>=ROUNDS?'🏆 לסיום':'הבא ←';$('qNext').classList.remove('hide');$('qNext').focus()}
+  else{b.classList.add('no');b.disabled=true;{const t='עוד ניסיון קטן'+(who?', '+who:'')+'!';$('qMsg').textContent='🙂 '+t;sayHe(t)}}};
+$('qNext').onclick=()=>{$('qNext').classList.add('hide');if(qRound>=ROUNDS){addPts(3);const pr=praiseRaw();sayHe(pr+' סיימת את החידון');$('qMsg').innerHTML=`🏆 ${esc(pr)} ${score} תשובות נכונות מתוך ${ROUNDS}`+(who?'<br>+3 נקודות בונוס על סיום':'');$('opts').innerHTML=`<button class="btn red" style="grid-column:1/-1" id="again">🔄 עוד סיבוב</button>`;$('again').onclick=qStart;$('qStat').textContent=''}else{qRound++;qAsk()}};
+$('qSay').onclick=()=>{const m=$('qMode').value;m==='pic'?say(D[ans][4],.75):sayLetter(ans)};
+$('qNew').onclick=qStart;$('qMode').onchange=qStart;
+
+// words by category: [English, emoji, reading, Hebrew]
+const W={
+"🎨 צבעים":[["Red","🔴","רֶד","אָדֹם"],["Blue","🔵","בְּלוּ","כָּחֹל"],["Green","🟢","גְרִין","יָרֹק"],["Yellow","🟡","יֶלוֹ","צָהֹב"],["Orange","🟠","אוֹרֶנְג'","כָּתֹם"],["Purple","🟣","פֶּרְפֶּל","סָגֹל"],["Pink","🌸","פִּינְק","וָרֹד"],["Brown","🟤","בְּרָאוּן","חוּם"],["Black","⚫","בְּלֶק","שָׁחֹר"],["White","⚪","וַוייט","לָבָן"]],
+"🔢 מספרים":[["One","1️⃣","וַאן","אַחַת"],["Two","2️⃣","טוּ","שְׁתַּיִם"],["Three","3️⃣","תְ'רִי","שָׁלוֹשׁ"],["Four","4️⃣","פוֹר","אַרְבַּע"],["Five","5️⃣","פַייב","חָמֵשׁ"],["Six","6️⃣","סִיקְס","שֵׁשׁ"],["Seven","7️⃣","סֶבֶן","שֶׁבַע"],["Eight","8️⃣","אֵייט","שְׁמוֹנֶה"],["Nine","9️⃣","נַיין","תֵּשַׁע"],["Ten","🔟","טֶן","עֶשֶׂר"]],
+"🏡 משפחה":[["Family","🏡","פֶמִילִי","מִשְׁפָּחָה"],["Father","👨","פָאדֶ'ר","אַבָּא"],["Mother","💖","מַאדֶ'ר","אִמָּא"],["Brother","👦","בְּרַאדֶ'ר","אָח"],["Sister","🎀","סִיסְטֶר","אָחוֹת"],["Baby","👶","בֵּייבִּי","תִּינוֹק"],["Grandfather","👴","גְרֶנְד־פָאדֶ'ר","סַבָּא"],["Grandmother","🧶","גְרֶנְד־מַאדֶ'ר","סָבְתָא"]],
+"🐾 בעלי חיים":[["Cat","🐱","קֶט","חָתוּל"],["Dog","🐶","דּוֹג","כֶּלֶב"],["Bird","🐦","בֶּרְד","צִפּוֹר"],["Fish","🐟","פִישׁ","דָּג"],["Horse","🐴","הוֹרְס","סוּס"],["Cow","🐄","קָאוּ","פָּרָה"],["Sheep","🐑","שִׁיפּ","כֶּבֶשׂ"],["Lion","🦁","לַיְאֶן","אַרְיֵה"],["Elephant","🐘","אֶלֶפַנְט","פִּיל"],["Monkey","🐒","מַנְקִי","קוֹף"]],
+"🍎 אוכל ושתייה":[["Apple","🍎","אֶפֶּל","תַּפּוּחַ"],["Banana","🍌","בַּנַנָה","בָּנָנָה"],["Bread","🍞","בְּרֶד","לֶחֶם"],["Milk","🥛","מִילְק","חָלָב"],["Water","💧","ווֹטֶר","מַיִם"],["Egg","🥚","אֶג","בֵּיצָה"],["Cheese","🧀","צִ'יז","גְּבִינָה"],["Cake","🍰","קֵייק","עוּגָה"],["Candy","🍬","קֶנְדִי","סֻכָּרִיָּה"],["Juice","🧃","ג'וּס","מִיץ"]],
+"✋ הגוף":[["Hand","✋","הֶנְד","יָד"],["Eye","👁️","אַיי","עַיִן"],["Ear","👂","אִיר","אֹזֶן"],["Nose","👃","נוֹז","אַף"],["Tooth","🦷","טוּת'","שֵׁן"],["Foot","🦶","פוּט","רֶגֶל"]],
+"🏠 בבית":[["House","🏠","הָאוּס","בַּיִת"],["Door","🚪","דוֹר","דֶּלֶת"],["Window","🪟","וִינְדוֹ","חַלּוֹן"],["Bed","🛏️","בֶּד","מִטָּה"],["Chair","🪑","צֶ'ר","כִּסֵּא"],["Book","📖","בּוּק","סֵפֶר"],["Ball","⚽","בּוֹל","כַּדּוּר"],["Cup","☕","קַפּ","כּוֹס"],["Key","🔑","קִי","מַפְתֵּחַ"],["Clock","🕰️","קְלוֹק","שָׁעוֹן"]],
+"🌳 טבע":[["Sun","☀️","סַן","שֶׁמֶשׁ"],["Moon","🌙","מוּן","יָרֵחַ"],["Star","⭐","סְטָאר","כּוֹכָב"],["Tree","🌳","טְרִי","עֵץ"],["Flower","🌼","פְלָאוּאֶר","פֶּרַח"],["Rain","🌧️","רֵיין","גֶּשֶׁם"],["Snow","❄️","סְנוֹ","שֶׁלֶג"],["Fire","🔥","פַייר","אֵשׁ"]],
+"💬 מילים חשובות":[["Yes","✅","יֶס","כֵּן"],["No","❌","נוֹ","לֹא"],["Hello","👋","הֶלוֹ","שָׁלוֹם"],["Thank you","🙏","תֶ'נְק יוּ","תּוֹדָה"],["Please","🤲","פְּלִיז","בְּבַקָּשָׁה"],["Good","👍","גוּד","טוֹב"],["Up","⬆️","אַפּ","לְמַעְלָה"],["Down","⬇️","דָּאוּן","לְמַטָּה"]]};
+let wCat=Object.keys(W)[0],wQ=false,wAns=-1,wDone=false,wScore=0;
+const renderCats=()=>{$('cats').innerHTML=Object.keys(W).map(c=>`<button class="chip${c===wCat?' on':''}" data-c="${c}">${c}</button>`).join('')};
+const renderWords=()=>{$('wLearn').innerHTML=W[wCat].map((w,n)=>`<button class="wc" data-n="${n}"><span class="e">${w[1]}</span><span class="w">${w[0]}</span><span class="t">${w[2]}</span><span class="h">${w[3]}</span></button>`).join('')};
+const wStat=()=>$('wStat').textContent=wQ?`נקודות בסבב: ${wScore}`:'לחצו על תמונה כדי לשמוע';
+const wAsk=()=>{const L=W[wCat];wDone=false;$('wMsg').textContent='';$('wNext').classList.add('hide');
+  let a;do{a=Math.random()*L.length|0}while(a===wAns&&L.length>1);wAns=a;
+  const opts=shuffle([wAns,...shuffle([...L.keys()].filter(i=>i!==wAns)).slice(0,3)]);
+  $('wOpts').innerHTML=opts.map(i=>`<button class="wopt" data-n="${i}" aria-label="תמונה">${L[i][1]}</button>`).join('');
+  say(L[wAns][0],.75)};
+const wSet=()=>{renderCats();renderWords();$('wLearn').classList.toggle('hide',wQ);$('wQuiz').classList.toggle('hide',!wQ);
+  $('wMode').textContent=wQ?'📖 חזרה ללימוד':'🎯 משחק: שומעים ומוצאים תמונה';wStat();if(wQ)wAsk()};
+$('cats').onclick=e=>{const c=e.target.closest('.chip');if(c){wCat=c.dataset.c;wScore=0;wAns=-1;wSet()}};
+$('wMode').onclick=()=>{wQ=!wQ;wScore=0;wAns=-1;wSet()};
+$('wLearn').onclick=e=>{const c=e.target.closest('.wc');if(c)say(W[wCat][+c.dataset.n][0],.75)};
+$('wSay').onclick=()=>say(W[wCat][wAns][0],.75);
+$('wOpts').onclick=e=>{const b=e.target.closest('.wopt');if(!b||wDone)return;const n=+b.dataset.n,w=W[wCat][wAns];
+  if(n===wAns){wDone=true;b.classList.add('ok','pop');wScore++;addPts(1);wStat();const pr=praiseRaw();
+    $('wMsg').innerHTML=`<span style="color:var(--green)">👏 ${esc(pr)}</span><br>${w[1]} <span class="en">${w[0]}</span> · קוראים: ${w[2]} · פירוש: ${w[3]}`;
+    say(w[0],.75);$('wNext').classList.remove('hide');$('wNext').focus()}
+  else{b.classList.add('no');b.disabled=true;$('wMsg').textContent='🙂 עוד ניסיון קטן'+(who?', '+who:'')+'!'}};
+$('wNext').onclick=wAsk;
+wSet();
+}
+</script>
+</body>
+</html>
