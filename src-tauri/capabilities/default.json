@@ -1,0 +1,9 @@
+{
+  "identifier": "default",
+  "description": "Only what the game needs: toggling full screen with F11",
+  "windows": ["main"],
+  "permissions": [
+    "core:window:allow-is-fullscreen",
+    "core:window:allow-set-fullscreen"
+  ]
+}

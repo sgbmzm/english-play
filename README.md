@@ -12,15 +12,17 @@
 
 ## תוכנה למחשב (Windows)
 
-בדף [Releases](https://github.com/sgbmzm/english-play/releases/latest) יש שני קבצים:
+בדף [Releases](https://github.com/sgbmzm/english-play/releases/latest) יש שתי גרסאות, כל אחת עם קובץ התקנה וקובץ נייד (בלי התקנה):
 
-- **`Lomdim-ABC-Setup-….exe`** – התקנה רגילה. נוצר אייקון "לומדים ABC" בשולחן העבודה ובתפריט התחל.
-- **`Lomdim-ABC-Portable-….exe`** – בלי התקנה, פשוט מריצים את הקובץ.
+| גרסה | קבצים | גודל | מה צריך במחשב |
+|---|---|---|---|
+| **רגילה** (Electron) | `Lomdim-ABC-Setup-….exe`, `Lomdim-ABC-Portable-….exe` | כ־110MB | כלום |
+| **קלה** (Tauri) | `Lomdim-ABC-Lite-Setup-….exe`, `Lomdim-ABC-Lite-Portable-….exe` | כמה מגה | WebView2 – מובנה ב־Windows 10/11 מעודכן |
 
-התוכנה מציגה רק את המשחק: אין שורת כתובת, אין לשוניות, ואין גישה לאינטרנט. מקש F11 עובר למסך מלא.
+בשתי הגרסאות התוכנה מציגה רק את המשחק: אין שורת כתובת, אין לשוניות, ואי אפשר לעבור לאתרים. מקש F11 עובר למסך מלא.
 בפעם הראשונה Windows עלול להציג אזהרה ("Windows protected your PC") כי התוכנה לא חתומה – לוחצים "More info" ואז "Run anyway".
 
-התוכנה נבנית אוטומטית ב־GitHub Actions בכל עדכון של המשחק. כדי ליצור גרסה חדשה בדף ה־Releases, מעלים את מספר הגרסה ב־`package.json`.
+התוכנות נבנות אוטומטית ב־GitHub Actions בכל עדכון של המשחק. כדי ליצור גרסה חדשה בדף ה־Releases, מעלים את מספר הגרסה ב־`package.json`.
 
 ## איך משתמשים בדפדפן
 

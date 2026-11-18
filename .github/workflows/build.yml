@@ -9,6 +9,7 @@ on:
       - package.json
       - fonts/**
       - build/**
+      - src-tauri/**
       - .github/workflows/build.yml
   workflow_dispatch:
 
@@ -16,34 +17,72 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  electron:
+    name: Electron (full, ~110 MB)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: Read version
-        id: ver
-        shell: bash
-        run: echo "v=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
-
       - run: npm install
-
       - run: npm run dist
-
       - uses: actions/upload-artifact@v4
         with:
-          name: Lomdim-ABC-windows
+          name: electron
           path: dist/*.exe
 
-      - name: Publish release
-        uses: softprops/action-gh-release@v2
+  tauri:
+    name: Tauri (lite, a few MB)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: Prepare game files
+        shell: bash
+        run: |
+          mkdir -p dist-web
+          cp index.html dist-web/
+          cp -r fonts dist-web/
+      - name: Make icons
+        run: npx --yes @tauri-apps/cli@2 icon build/icon.png -o src-tauri/icons
+      - name: Build
+        run: npx --yes @tauri-apps/cli@2 build
+      - name: Collect files
+        shell: bash
+        run: |
+          v=$(node -p "require('./package.json').version")
+          mkdir -p out
+          cp src-tauri/target/release/bundle/nsis/*-setup.exe "out/Lomdim-ABC-Lite-Setup-$v.exe"
+          cp src-tauri/target/release/lomdim-abc.exe "out/Lomdim-ABC-Lite-Portable-$v.exe"
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tauri
+          path: out/*.exe
+
+  release:
+    needs: [electron, tauri]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read version
+        id: ver
+        run: echo "v=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          path: files
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.v }}
           target_commitish: ${{ github.sha }}
           name: לומדים ABC v${{ steps.ver.outputs.v }}
           make_latest: true
-          files: dist/*.exe
+          files: files/*.exe

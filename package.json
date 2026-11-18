@@ -1,6 +1,6 @@
 {
   "name": "english-play",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "English ABC game for Hebrew-speaking kids",
   "main": "main.js",
   "author": "sgbmzm",
@@ -28,8 +28,18 @@
     "win": {
       "icon": "build/icon.png",
       "target": [
-        { "target": "nsis", "arch": ["x64"] },
-        { "target": "portable", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
     },
     "nsis": {
