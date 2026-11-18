@@ -1,0 +1,45 @@
+{
+  "name": "english-play",
+  "version": "1.0.0",
+  "description": "English ABC game for Hebrew-speaking kids",
+  "main": "main.js",
+  "author": "sgbmzm",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never"
+  },
+  "devDependencies": {
+    "electron": "^45.3.4",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "io.github.sgbmzm.englishplay",
+    "productName": "Lomdim ABC",
+    "files": [
+      "main.js",
+      "index.html",
+      "fonts/**",
+      "build/icon.png"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "shortcutName": "לומדים ABC",
+      "artifactName": "Lomdim-ABC-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Lomdim-ABC-Portable-${version}.${ext}"
+    }
+  }
+}
